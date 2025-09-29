@@ -44,13 +44,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'rest_framework_simplejwt',
-    'apps.auth',
-    'apps.review',
-    'apps.catalog',
-    'apps.order',
-    'apps.payment',
-    'apps.cart',
-    'apps.admin',
+    'catalog',
     ]
 
 MIDDLEWARE = [
@@ -73,6 +67,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
