@@ -6,10 +6,10 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
 
-  
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
 class UserProfile(models.Model):
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     phone = models.CharField(max_length=15, blank=True)
     id=models.AutoField(primary_key=True)
