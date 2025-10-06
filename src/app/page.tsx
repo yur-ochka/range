@@ -369,13 +369,11 @@ export const mockCategories = [
   },
 ];
 
-import Header from "@/components/Header";
 import { CategoryList } from "@/components/main";
 import { Button, Image, Title, Box, Center } from "@mantine/core";
 export default function Home() {
   return (
     <>
-      <Header></Header>
       <Box px="67px">
         <Image src="/mainPagePic.png" alt="super kartinka" w="100%" pb={"xl"} />
         <Title order={1} pb={"xl"}>

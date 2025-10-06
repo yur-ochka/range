@@ -1,5 +1,4 @@
 "use client";
-import Header from "@/components/Header";
 import {
   Button,
   TextInput,
@@ -32,7 +31,6 @@ export default function LoginForm() {
 
   return (
     <>
-      <Header></Header>
       <Center h="80vh" w="100vw">
         <Box
           style={{

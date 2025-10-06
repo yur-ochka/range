@@ -369,7 +369,6 @@ export const mockCategories = [
   },
 ];
 
-import Header from "@/components/Header";
 import { Box, Title } from "@mantine/core";
 import { use } from "react";
 import { ItemList } from "@/components/category";
@@ -383,7 +382,6 @@ export default function CategoryPage({
   //   const { data: item, isLoading, isError } = useItem(id);
   return (
     <>
-      <Header></Header>
       <Box px="67px">
         <Title order={1} pb={"xl"}>
           {category?.title}

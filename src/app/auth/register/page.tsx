@@ -1,5 +1,4 @@
 "use client";
-import Header from "@/components/Header";
 import {
   Button,
   TextInput,
@@ -34,7 +33,6 @@ export default function SignUpForm() {
 
   return (
     <>
-      <Header></Header>
       <Center h="80vh" w="100vw" p="md">
         <Box
           style={{
