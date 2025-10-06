@@ -10,11 +10,11 @@ import {
   Box,
   Text,
 } from "@mantine/core";
-import { useForm, isEmail, hasLength } from "@mantine/form";
+import { useForm, matchesField, isEmail, hasLength } from "@mantine/form";
 import Link from "next/link";
 import { useState } from "react";
 
-export default function LoginForm() {
+export default function SignUpForm() {
   const [generalError, setGeneralError] = useState<string | null>(null);
 
   const form = useForm({
@@ -23,25 +23,27 @@ export default function LoginForm() {
     initialValues: {
       email: "",
       password: "",
+      confirmPassword: "",
     },
     validate: {
       email: isEmail("Некоректний email"),
       password: hasLength({ min: 8 }, "Пароль закороткий"),
+      confirmPassword: matchesField("password", "Паролі не співпадають"),
     },
   });
 
   return (
     <>
       <Header></Header>
-      <Center h="80vh" w="100vw">
+      <Center h="80vh" w="100vw" p="md">
         <Box
           style={{
-            width: "90%",
+            width: "100%",
             maxWidth: 400,
             backgroundColor: "#F5F5F5",
+            borderRadius: "18px",
             padding: "2rem",
-            borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
           }}
         >
           <form>
@@ -53,7 +55,7 @@ export default function LoginForm() {
               wrap="wrap"
             >
               <Title order={2} mb="xl">
-                Увійти
+                Реєстрація
               </Title>
 
               <TextInput
@@ -69,6 +71,13 @@ export default function LoginForm() {
                 placeholder="Введіть пароль"
                 {...form.getInputProps("password")}
               />
+
+              <PasswordInput
+                w="100%"
+                label="Підтвердіть пароль"
+                placeholder="Підтвердіть пароль"
+                {...form.getInputProps("confirmPassword")}
+              />
               {generalError && (
                 <Text c="red" size="sm" mt="xs">
                   {generalError}
@@ -76,15 +85,15 @@ export default function LoginForm() {
               )}
 
               <Button w="100%" type="submit" mt="md" radius="xl" color="black">
-                УВІЙТИ
+                ЗАРЕЄСТРУВАТИСЯ
               </Button>
 
               <Text mt="md" size="sm">
-                Або зареєструйтесь за допомогою:
+                Або увійдіть за допомогою:
               </Text>
-              <Link href="/auth/register">
+              <Link href="/auth/login">
                 <Text c="black" fw={500} style={{ cursor: "pointer" }}>
-                  РЕЄСТРАЦІЯ
+                  УВІЙТИ
                 </Text>
               </Link>
             </Flex>
