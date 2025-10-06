@@ -370,23 +370,25 @@ export const mockCategories = [
 ];
 
 import Header from "@/components/Header";
-import { CategoryList } from "@/components/main";
-import { Button, Image, Title, Box, Center } from "@mantine/core";
-export default function Home() {
+import { Box, Title } from "@mantine/core";
+import { use } from "react";
+import { ItemList } from "@/components/category";
+export default function CategoryPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+  const category = mockCategories.find((cat) => cat.id === id);
+  //   const { data: item, isLoading, isError } = useItem(id);
   return (
     <>
       <Header></Header>
       <Box px="67px">
-        <Image src="/mainPagePic.png" alt="super kartinka" w="100%" pb={"xl"} />
         <Title order={1} pb={"xl"}>
-          Каталог товарів
+          {category?.title}
         </Title>
-        <CategoryList categories={mockCategories}></CategoryList>
-        <Center pb="xl">
-          <Button radius="xl" color="black" variant="filled" size="lg">
-            Завантажити ще
-          </Button>
-        </Center>
+        <ItemList items={category!.items}></ItemList>
       </Box>
     </>
   );

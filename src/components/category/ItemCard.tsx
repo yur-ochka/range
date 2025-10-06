@@ -1,30 +1,28 @@
 import { Box, Image, Stack, Text, Title } from "@mantine/core";
 import Link from "next/link";
-import { ItemCardProps } from "../category";
 
-export interface CategoryCardProps {
+export interface ItemCardProps {
   title: string;
-  description: string | null;
+  price: number;
   imageUrl: string;
   altText?: string;
   id: string;
-  items: ItemCardProps[];
 }
 
-export function CategoryCard({
+export function ItemCard({
   title,
-  description,
+  price,
   imageUrl,
   altText,
   id,
-}: CategoryCardProps) {
+}: ItemCardProps) {
   return (
-    <Link href={`/category/${id}`} style={{ textDecoration: "none" }}>
+    <Link href={`/item/${id}`} style={{ textDecoration: "none" }}>
       <Box mah="489px">
         <Stack align="stretch" gap="sm">
           <Image src={imageUrl} alt={altText ? altText : "Placeholder"}></Image>
           <Title order={4}>{title}</Title>
-          <Text>{description}</Text>
+          <Text>{price}₴</Text>
         </Stack>
       </Box>
     </Link>
