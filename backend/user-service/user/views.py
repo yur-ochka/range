@@ -8,10 +8,11 @@ from .serializers import (
     UserRegistrationSerializer
 )
 
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
-    permission_classes = [AllowAny]  # Allow any user (authenticated or not) to access this view
+    permission_classes = [AllowAny]  # Allow any user to access this view
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -27,6 +28,7 @@ class RegisterView(generics.CreateAPIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ProfileView(generics.RetrieveAPIView):
     serializer_class = UserWithProfileSerializer
     permission_classes = [IsAuthenticated]
@@ -34,10 +36,11 @@ class ProfileView(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
+
 class ProfileUpdateView(generics.UpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        profile, created = UserProfile.objects.get_or_create(user=self.request.user)
+        profile, _ = UserProfile.objects.get_or_create(user=self.request.user)
         return profile
