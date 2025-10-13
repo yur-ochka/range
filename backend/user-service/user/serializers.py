@@ -5,71 +5,72 @@ from .models import User, UserProfile
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for User model with basic user information."""
+    """Basic User serializer (read-only info)."""
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'first_name', 'last_name',
-                  'is_active', 'date_joined']
+        fields = [
+            'id', 'email', 'username', 'first_name', 'last_name',
+            'is_active', 'date_joined'
+        ]
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    """Serializer for UserProfile model with user profile information."""
+    """User profile serializer."""
     class Meta:
         model = UserProfile
-        fields = ['phone', 'address', 'date_of_birth']
+        fields = ['id', 'phone']
 
 
 class UserWithProfileSerializer(serializers.ModelSerializer):
-    """Serializer for User model that includes related UserProfile info."""
+    """Full user info including profile."""
     profile = UserProfileSerializer(read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'first_name',
-                  'last_name', 'is_active', 'date_joined', 'profile']
+        fields = [
+            'id', 'email', 'username', 'first_name', 'last_name',
+            'is_active', 'date_joined', 'profile'
+        ]
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    """Serializer for user registration with password validation."""
+    """Registration serializer with password confirmation and validation."""
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['email', 'username', 'first_name',
-                  'last_name', 'password', 'password_confirm']
+        fields = [
+            'email', 'username', 'first_name',
+            'last_name', 'password', 'password_confirm'
+        ]
 
-    def validate_email(self, value):  # Unique email check
+    def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                "A user with this email already exists.")
+            raise serializers.ValidationError("User with same  email already exists.")
         return value
 
-    def validate_username(self, value):  # Unique username check
+    def validate_username(self, value):
         if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError(
-                "A user with this username already exists.")
+            raise serializers.ValidationError("User with same username already exists.")
         return value
 
-    def validate_password(self, value):  # Password validation
+    def validate_password(self, value):
         try:
             validate_password(value)
         except ValidationError as e:
             raise serializers.ValidationError(list(e.messages))
         return value
 
-    def validate(self, attrs):  # Password check
+    def validate(self, attrs):
         if attrs.get('password') != attrs.get('password_confirm'):
-            raise serializers.ValidationError({
-                'password_confirm': 'Passwords do not match'
-            })
+            raise serializers.ValidationError({'password_confirm': 'Passwords do not match.'})
         return attrs
 
-    def create(self, validated_data):  # Create user
+    def create(self, validated_data):
         validated_data.pop('password_confirm', None)
+        password = validated_data.pop('password')
 
-        user = User.objects.create_user(**validated_data)
-
+        user = User.objects.create_user(password=password, **validated_data)
         UserProfile.objects.create(user=user)
-
         return user
