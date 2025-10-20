@@ -8,7 +8,6 @@ from .serializers import (
     ProductDetailSerializer, ProductCreateUpdateSerializer
 )
 
-
 class CategoryListView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -20,7 +19,6 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     lookup_field = 'id'
-
 
 class ProductListView(generics.ListCreateAPIView):
     queryset = Product.objects.filter(in_stock=True)
@@ -57,3 +55,56 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT', 'PATCH']:
             return ProductCreateUpdateSerializer
         return ProductDetailSerializer
+
+@api_view(['POST'])
+def reserve_product(request, product_id):
+    """Product reservation endpoint"""
+    try:
+        product = Product.objects.get(id=product_id)
+        quantity = int(request.data.get('quantity', 1))
+
+        if product.reserve_quantity(quantity):
+            return Response({
+                'success': True,
+                'message': f'{quantity} units of goods reserved.',
+                'remaining_stock': product.stock_quantity
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'message': 'Insufficient quantity of goods in stock.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    except Product.DoesNotExist:
+        return Response({'error': 'Product not found .'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+def release_product(request, product_id):
+    """Release of product reserve"""
+    try:
+        product = Product.objects.get(id=product_id)
+        quantity = int(request.data.get('quantity', 1))
+        product.release_quantity(quantity)
+        return Response({
+            'success': True,
+            'message': f'{quantity} units returned to stock.',
+            'new_stock': product.stock_quantity
+        }, status=status.HTTP_200_OK)
+    except Product.DoesNotExist:
+        return Response({'error': 'Product not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def check_availability(request, product_id):
+    """Check product availability"""
+    try:
+        product = Product.objects.get(id=product_id)
+        return Response({
+            'product_id': str(product.id),
+            'title': product.title,
+            'in_stock': product.in_stock,
+            'stock_quantity': product.stock_quantity
+        }, status=status.HTTP_200_OK)
+    except Product.DoesNotExist:
+        return Response({'error': 'Product not found.'}, status=status.HTTP_404_NOT_FOUND)
