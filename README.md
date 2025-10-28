@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Range
 
-## Getting Started
+Range – твій універсальний онлайн-магазин (наш командний проєкт), де можна купити все (навіть субмарину)
 
-First, run the development server:
+Уявіть собі місце, де всі ваші потреби зводяться в одному зручному інтерфейсі. Range – це сучасний онлайн-магазин, який поєднує різноманіття товарів, комфорт покупок та швидку доставку. Тут можна знайти все: від електроніки та одягу до побутових товарів та аксесуарів, а інтуїтивно зрозумілий дизайн сайту дозволяє швидко знаходити потрібний продукт.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Ключові переваги Range:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Широкий асортимент: ти завжди знайдеш те, що шукаєш.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Зручність: покупки стають простими та приємними.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Безпека: надійна оплата та захист даних.
 
-## Learn More
+- Доставка: швидка та зручна прямо до дверей.
 
-To learn more about Next.js, take a look at the following resources:
+Range – це не просто магазин, це твоє місце, де покупки стають задоволенням, а всі товари – на відстані одного кліку.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Ролі
 
-## Deploy on Vercel
+У командній розробці важливо правильно розподілити завдання між учасниками для досягнення максимальної ефективності. Тому в проекті веб-додатку одна частина команди працює над фронтендом, тоді як інша частина відповідає за бекенд. Ролі в команді були поділені наступним чином:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Backend-розробник (Козарезов Кирило) — відповідає за реалізацію серверної частини програми, бізнес-логіку та роботу з базою даних.
+- Frontend-розробник (Юрченко Ілля) — розробляє інтерфейс користувача, займається версткою і налаштуванням інтерактивності сторінок.
+- Team-lead (Мельниченко Артем) — оформлює документи для лабораторних робіт, заповненює бази даних товарами, керує процесом розробки.
+- Дизайнер (Гасюкова Катерина) - розробляє дизайн макету сайту, координує Frontend-розробника у розробці правильного дизайну.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Спільні завдання:
+- тестування
+- процес код-рев'ю
+
+### Інструкція для встановлення та запуску програми
+
+На даний момент є лише сайт
+
+Сайт: https://range-lemon.vercel.app/
