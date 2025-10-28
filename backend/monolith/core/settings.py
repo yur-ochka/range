@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'corsheaders',
 
     # Local apps (to be added as you migrate)
-    # 'apps.accounts',
+    # 'apps.user',
     # 'apps.catalog',
     # 'apps.cart',
     # 'apps.order',
