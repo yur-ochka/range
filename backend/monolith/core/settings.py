@@ -15,12 +15,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Third-party
     'rest_framework',
     'corsheaders',
-    'django_filters',
-    'rest_framework_simplejwt',
-    'apps.user',
-    ]
+
+    # Local apps (to be added as you migrate)
+    # 'apps.user',
+    # 'apps.catalog',
+    # 'apps.cart',
+    # 'apps.order',
+    # 'apps.payment',
+    # 'apps.review',
+]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
