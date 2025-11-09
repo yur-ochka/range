@@ -1,12 +1,21 @@
 import os
 from pathlib import Path
+from decouple import config, Csv
+from django.core.exceptions import ImproperlyConfigured
 from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'FlipFlop'
-DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+SECRET_KEY = config('DJANGO_SECRET_KEY', default='FlipFlop')
+DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
+ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0', cast=Csv())
+
+# Security check: do not allow running with the placeholder secret in production
+if not DEBUG and (not SECRET_KEY or SECRET_KEY == 'FlipFlop'):
+    raise ImproperlyConfigured(
+        'DJANGO_SECRET_KEY is not set or is using the insecure default. '
+        'Set DJANGO_SECRET_KEY in environment for production.'
+    )
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -57,7 +66,8 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR.parent.parent / 'databases' / 'catalog.db',
+        # allow overriding DB file path via env (relative or absolute)
+        'NAME': Path(config('DATABASE_PATH', default=str(BASE_DIR.parent.parent / 'databases'))),
     }
 }
 
@@ -80,6 +90,7 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',  
