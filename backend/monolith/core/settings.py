@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'apps.catalog',
     'apps.user',
     'apps.cart',
+    'apps.order',
     ]
 
 MIDDLEWARE = [
@@ -64,11 +65,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
+# allow overriding DB file path via env (relative or absolute)
+# default to a file path (databases/db.sqlite3) instead of a directory
+# ensure parent directory exists so sqlite can create the file
+_db_path_str = config('DATABASE_PATH', default=str(BASE_DIR.parent.parent / 'databases' / 'db.sqlite3'))
+DB_PATH = Path(_db_path_str)
+try:
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+except Exception:
+    # If directory creation fails (permissions), let Django raise when opening DB
+    pass
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        # allow overriding DB file path via env (relative or absolute)
-        'NAME': Path(config('DATABASE_PATH', default=str(BASE_DIR.parent.parent / 'databases'))),
+        'NAME': str(DB_PATH),
     }
 }
 

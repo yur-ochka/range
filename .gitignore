@@ -46,3 +46,6 @@ next-env.d.ts
 
 __pycache__/
 *.pyc
+/db_backups/
+/databases/
+*.sqlite3
