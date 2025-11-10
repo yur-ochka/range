@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'apps.user',
     'apps.cart',
     'apps.order',
+    'apps.payment',
     ]
 
 MIDDLEWARE = [
@@ -164,3 +165,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Provide these via environment variables when enabling Stripe.
+STRIPE_API_KEY = config('STRIPE_API_KEY', default=None)
+STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default=None)
