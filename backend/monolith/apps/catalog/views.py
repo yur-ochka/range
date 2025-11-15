@@ -7,7 +7,6 @@ from .serializers import (
     CategorySerializer, ProductSerializer,
     ProductDetailSerializer, ProductCreateUpdateSerializer
 )
-
 class CategoryListView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
