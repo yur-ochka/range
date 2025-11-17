@@ -29,12 +29,16 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            phone = ''
+            if hasattr(user, 'profile'):
+                phone = user.profile.phone
             return Response({
                 'id': user.id,
                 'email': user.email,
                 'username': user.username,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
+                'phone': phone,
                 'message': 'User registered successfully'
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -167,3 +171,11 @@ def refresh_token(request):
             {'error': 'Invalid refresh token'},
             status=status.HTTP_401_UNAUTHORIZED
         )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def guest_session(request):
+    if not request.session.session_key:
+        request.session.create()
+    return Response({'session_key': request.session.session_key}, status=status.HTTP_200_OK)

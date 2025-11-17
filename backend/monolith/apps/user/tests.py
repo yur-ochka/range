@@ -88,6 +88,7 @@ class UserAuthTests(APITestCase):
             'username': 'newuser',
             'first_name': 'New',
             'last_name': 'User',
+            'phone': '+380931112233',
             'password': 'AnotherStrongPass123!',
             'password_confirm': 'AnotherStrongPass123!',
         }
@@ -98,6 +99,8 @@ class UserAuthTests(APITestCase):
         self.assertTrue(User.objects.filter(email=payload['email']).exists())
         created_user = User.objects.get(email=payload['email'])
         self.assertTrue(hasattr(created_user, 'profile'))
+        self.assertEqual(created_user.profile.phone, payload['phone'])
+        self.assertEqual(response.data['phone'], payload['phone'])
 
     def test_login_returns_tokens(self):
         response = self.client.post(
@@ -153,3 +156,11 @@ class UserAuthTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
+
+    def test_guest_session_returns_session_key(self):
+        guest_url = reverse('guest-session')
+        response = self.client.post(guest_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('session_key', response.data)
+        self.assertTrue(response.data['session_key'])

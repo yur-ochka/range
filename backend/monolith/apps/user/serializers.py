@@ -33,12 +33,13 @@ class UserWithProfileSerializer(serializers.ModelSerializer):
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True)
+    phone = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = User
         fields = [
             'email', 'username', 'first_name',
-            'last_name', 'password', 'password_confirm'
+            'last_name', 'phone', 'password', 'password_confirm'
         ]
 
     def validate_email(self, value):
@@ -66,9 +67,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm', None)
         password = validated_data.pop('password')
+        phone = validated_data.pop('phone', '').strip()
 
         user = User.objects.create_user(password=password, **validated_data)
-        UserProfile.objects.create(user=user)
+        UserProfile.objects.create(user=user, phone=phone)
         return user
 
 

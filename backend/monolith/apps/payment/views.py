@@ -11,6 +11,14 @@ from .models import PaymentTransaction
 from . import services
 
 
+def _set_order_status(transaction, status_value):
+    order = getattr(transaction, 'order', None)
+    if order and status_value:
+        if order.status != status_value:
+            order.status = status_value
+            order.save(update_fields=['status', 'updated_at'])
+
+
 class CreatePaymentView(APIView):
     """Create a payment transaction (payment intent) for an order."""
 
@@ -96,9 +104,12 @@ class WebhookView(APIView):
                 if tx:
                     if event_type == 'payment_intent.succeeded':
                         tx.status = PaymentTransaction.STATUS_SUCCEEDED
+                        tx.save()
+                        _set_order_status(tx, tx.order.STATUS_PAID if tx.order else None)
                     else:
                         tx.status = PaymentTransaction.STATUS_FAILED
-                    tx.save()
+                        tx.save()
+                        _set_order_status(tx, tx.order.STATUS_CANCELLED if tx.order else None)
             # Handle charge refunded events (Stripe might send charge.refunded)
             elif event_type == 'charge.refunded':
                 # If refund happened from dashboard, update local payment status/amount
@@ -113,9 +124,12 @@ class WebhookView(APIView):
                         pass
                     elif refunded_major < float(tx.amount):
                         tx.status = PaymentTransaction.STATUS_PARTIALLY_REFUNDED
+                        tx.save()
+                        _set_order_status(tx, tx.order.STATUS_PENDING if tx.order else None)
                     else:
                         tx.status = PaymentTransaction.STATUS_REFUNDED
-                    tx.save()
+                        tx.save()
+                        _set_order_status(tx, tx.order.STATUS_CANCELLED if tx.order else None)
             return Response({'received': True})
 
         # Dummy fallback path
@@ -131,9 +145,11 @@ class WebhookView(APIView):
         if event == 'payment_succeeded':
             tx.status = PaymentTransaction.STATUS_SUCCEEDED
             tx.save()
+            _set_order_status(tx, tx.order.STATUS_PAID if tx.order else None)
         elif event == 'payment_failed':
             tx.status = PaymentTransaction.STATUS_FAILED
             tx.save()
+            _set_order_status(tx, tx.order.STATUS_CANCELLED if tx.order else None)
         return Response({'ok': True})
 
 

@@ -19,27 +19,30 @@ class ProductCatalogTests(APITestCase):
 		self.product_a = Product.objects.create(
 			title='Runner',
 			description='Running shoes',
+			brand='Speedster',
 			price=Decimal('99.99'),
 			category=self.category,
-			rating=4,
+			rating=Decimal('4.00'),
 			stock_quantity=10,
 			in_stock=True,
 		)
 		self.product_b = Product.objects.create(
 			title='Walker',
 			description='Walking shoes',
+			brand='ComfortCo',
 			price=Decimal('79.99'),
 			category=self.category,
-			rating=5,
+			rating=Decimal('5.00'),
 			stock_quantity=5,
 			in_stock=True,
 		)
 		self.product_c = Product.objects.create(
 			title='Socks',
 			description='Warm socks',
+			brand='WarmFeet',
 			price=Decimal('9.99'),
 			category=self.other_category,
-			rating=3,
+			rating=Decimal('3.00'),
 			stock_quantity=50,
 			in_stock=True,
 		)
@@ -84,6 +87,14 @@ class ProductCatalogTests(APITestCase):
 			[item['id'] for item in response_unknown.data['results']],
 		)
 
+	def test_filter_by_brand(self):
+		response = self.client.get(self.list_url, {'brand': self.product_a.brand})
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		results = response.data['results']
+		self.assertEqual(len(results), 1)
+		self.assertEqual(results[0]['id'], str(self.product_a.id))
+
 
 class FavoriteTests(APITestCase):
 	def setUp(self):
@@ -98,6 +109,7 @@ class FavoriteTests(APITestCase):
 		self.product = Product.objects.create(
 			title='Backpack',
 			description='Travel backpack',
+			brand='CarryAll',
 			price=Decimal('49.99'),
 			category=self.category,
 			rating=Decimal('0.00'),
@@ -141,6 +153,7 @@ class RatingTests(APITestCase):
 		self.product = Product.objects.create(
 			title='Headphones',
 			description='Noise cancelling',
+			brand='SoundMax',
 			price=Decimal('199.99'),
 			category=self.category,
 			rating=Decimal('0.00'),

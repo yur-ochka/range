@@ -24,6 +24,7 @@ class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    brand = models.CharField(max_length=120, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image_url = models.URLField(blank=True)
     alt_text = models.CharField(max_length=200, blank=True, null=True)

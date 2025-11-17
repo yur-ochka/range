@@ -1,6 +1,6 @@
 from rest_framework import generics, filters, status
 from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, SAFE_METHODS, BasePermission
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
@@ -11,9 +11,19 @@ from .serializers import (
     ProductDetailSerializer, ProductCreateUpdateSerializer,
     FavoriteSerializer, RatingSerializer
 )
+
+
+class IsAdminOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        return bool(request.user and request.user.is_staff)
+
+
 class CategoryListView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'description']
 
@@ -21,19 +31,23 @@ class CategoryListView(generics.ListCreateAPIView):
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [IsAdminOrReadOnly]
     lookup_field = 'id'
 
 class ProductListView(generics.ListCreateAPIView):
-    queryset = Product.objects.filter(in_stock=True)
+    queryset = Product.objects.all()
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['category', 'in_stock']
-    search_fields = ['title', 'description']
+    filterset_fields = ['category', 'in_stock', 'brand']
+    search_fields = ['title', 'description', 'brand']
     ordering_fields = ['title', 'price', 'created_at', 'rating']
     ordering = ['-created_at']
+    permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        if not (self.request.user and self.request.user.is_staff):
+            queryset = queryset.filter(in_stock=True)
 
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
@@ -74,6 +88,7 @@ class ProductListView(generics.ListCreateAPIView):
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.select_related('category').prefetch_related('ratings', 'favorited_by')
+    permission_classes = [IsAdminOrReadOnly]
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:

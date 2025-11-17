@@ -23,23 +23,31 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'status', 'total_amount', 'total', 'shipping_address', 'items', 'created_at', 'updated_at']
+        fields = [
+            'id', 'user', 'status', 'total_amount', 'total', 'shipping_address',
+            'contact_email', 'contact_phone', 'contact_name', 'items', 'created_at', 'updated_at'
+        ]
 
     def get_total(self, obj):
         return obj.calculate_total()
 
 
 class OrderCreateSerializer(serializers.Serializer):
-    shipping_address = serializers.CharField(allow_blank=True, required=False)
-    items = serializers.ListField(child=serializers.DictField(), min_length=1)
+    shipping_address = serializers.CharField(allow_blank=False)
+    contact_email = serializers.EmailField(required=False)
+    contact_phone = serializers.CharField(required=False, allow_blank=True)
+    contact_name = serializers.CharField(required=False, allow_blank=True)
+    items = serializers.ListField(child=serializers.DictField(), required=False)
 
     def validate_items(self, value):
-        # expect list of {"product_id": uuid, "quantity": int}
+        if not value:
+            return []
+
         validated = []
-        for idx, it in enumerate(value):
-            pid = it.get('product_id')
-            qty = it.get('quantity')
-            if not pid or not qty:
+        for idx, payload in enumerate(value):
+            pid = payload.get('product_id')
+            qty = payload.get('quantity')
+            if not pid or qty in (None, ''):
                 raise serializers.ValidationError(f'item[{idx}] missing product_id or quantity')
             try:
                 product = Product.objects.get(id=pid)
@@ -53,3 +61,14 @@ class OrderCreateSerializer(serializers.Serializer):
                 raise serializers.ValidationError(f'item[{idx}] quantity must be > 0')
             validated.append({'product': product, 'quantity': qty})
         return validated
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        is_authenticated = bool(request and request.user and request.user.is_authenticated)
+        if not is_authenticated and not attrs.get('contact_email'):
+            raise serializers.ValidationError({'contact_email': 'Email is required for guest checkout.'})
+        return attrs
+
+
+class OrderStatusUpdateSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=Order.STATUS_CHOICES)
