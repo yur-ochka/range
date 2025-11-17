@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from . import views
 
 urlpatterns = [
@@ -20,4 +20,7 @@ urlpatterns = [
     # Favorites
     path('favorites/', views.FavoriteListCreateView.as_view(), name='favorite-list'),
     path('favorites/<uuid:product_id>/', views.FavoriteDestroyView.as_view(), name='favorite-delete'),
+
+    #Coments
+    path('', include('apps.comments.urls')),
 ]
