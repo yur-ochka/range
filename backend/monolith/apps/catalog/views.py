@@ -25,7 +25,7 @@ class ProductListView(generics.ListCreateAPIView):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'in_stock']
     search_fields = ['title', 'description']
-    ordering_fields = ['title', 'price', 'created_at']
+    ordering_fields = ['title', 'price', 'created_at', 'rating']
     ordering = ['-created_at']
 
     def get_queryset(self):
@@ -41,6 +41,27 @@ class ProductListView(generics.ListCreateAPIView):
 
         return queryset
 
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+
+        sort = self.request.query_params.get('sort')
+        if sort:
+            sort_map = {
+                'price_asc': 'price',
+                'price_desc': '-price',
+                'newest': '-created_at',
+                'oldest': 'created_at',
+                'rating_desc': '-rating',
+                'rating_asc': 'rating',
+                'title_asc': 'title',
+                'title_desc': '-title',
+            }
+            ordering = sort_map.get(sort.lower())
+            if ordering:
+                queryset = queryset.order_by(ordering)
+
+        return queryset
+
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return ProductCreateUpdateSerializer
@@ -48,7 +69,7 @@ class ProductListView(generics.ListCreateAPIView):
 
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.select_related('category')
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:

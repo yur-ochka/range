@@ -33,6 +33,19 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ProductDetailSerializer(ProductSerializer):
     category = CategorySerializer(read_only=True)
+    recommendations = serializers.SerializerMethodField()
+
+    class Meta(ProductSerializer.Meta):
+        fields = ProductSerializer.Meta.fields + ['category', 'recommendations']
+
+    def get_recommendations(self, obj):
+        request = self.context.get('request')
+        queryset = (
+            Product.objects.filter(category=obj.category, in_stock=True)
+            .exclude(pk=obj.pk)
+            .order_by('-created_at')[:4]
+        )
+        return ProductSerializer(queryset, many=True, context={'request': request}).data
 
 
 class ProductCreateUpdateSerializer(serializers.ModelSerializer):
