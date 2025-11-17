@@ -1,12 +1,14 @@
 import os
+import dj_database_url  # <-- Додано цей імпорт
 from pathlib import Path
+from urllib.parse import urlparse
 from decouple import config, Csv
 from django.core.exceptions import ImproperlyConfigured
 from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('DJANGO_SECRET_KEY', default='FlipFlop')
+SECRET_KEY = config('DJANGO_SECRET_KEY')
 DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0', cast=Csv())
 
@@ -67,23 +69,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# allow overriding DB file path via env (relative or absolute)
-# default to a file path (databases/db.sqlite3) instead of a directory
-# ensure parent directory exists so sqlite can create the file
-_db_path_str = config('DATABASE_PATH', default=str(BASE_DIR.parent.parent / 'databases' / 'db.sqlite3'))
-DB_PATH = Path(_db_path_str)
-try:
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-except Exception:
-    # If directory creation fails (permissions), let Django raise when opening DB
-    pass
+# --- Database configuration (Рекомендований варіант) ---
+# Цей блок замінює всю вашу попередню логіку if/elif/else
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(DB_PATH),
-    }
+    'default': dj_database_url.config(
+        # Читає DATABASE_URL зі змінних оточення або .env
+        default=config('DATABASE_URL', default=''),
+        conn_max_age=600
+    )
 }
+
+# Якщо DATABASE_URL не задано, налаштовуємо SQLite за замовчуванням
+if not DATABASES['default']:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3', # Простіший шлях до SQLite
+    }
+# --- Кінець блоку Database configuration ---
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
