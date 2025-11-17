@@ -70,3 +70,25 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(password=password, **validated_data)
         UserProfile.objects.create(user=user)
         return user
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    re_new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['re_new_password']:
+            raise serializers.ValidationError({'re_new_password': 'Passwords do not match.'})
+
+        try:
+            validate_password(attrs['new_password'])
+        except ValidationError as exc:
+            raise serializers.ValidationError({'new_password': list(exc.messages)})
+
+        return attrs

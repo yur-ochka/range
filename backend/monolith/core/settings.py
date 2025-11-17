@@ -126,6 +126,13 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'user.User'
 
+EMAIL_BACKEND = config(
+    'DJANGO_EMAIL_BACKEND',
+    default='django.core.mail.backends.console.EmailBackend'
+)
+DEFAULT_FROM_EMAIL = config('DJANGO_DEFAULT_FROM_EMAIL', default='no-reply@range-shop.local')
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
