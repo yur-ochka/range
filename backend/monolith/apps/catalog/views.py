@@ -1,11 +1,15 @@
 from rest_framework import generics, filters, status
 from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Category, Product
+from django.shortcuts import get_object_or_404
+
+from .models import Category, Product, Favorite, Rating
 from .serializers import (
     CategorySerializer, ProductSerializer,
-    ProductDetailSerializer, ProductCreateUpdateSerializer
+    ProductDetailSerializer, ProductCreateUpdateSerializer,
+    FavoriteSerializer, RatingSerializer
 )
 class CategoryListView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
@@ -69,12 +73,73 @@ class ProductListView(generics.ListCreateAPIView):
 
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Product.objects.select_related('category')
+    queryset = Product.objects.select_related('category').prefetch_related('ratings', 'favorited_by')
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
             return ProductCreateUpdateSerializer
         return ProductDetailSerializer
+
+
+class FavoriteListCreateView(generics.ListCreateAPIView):
+    serializer_class = FavoriteSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user).select_related('product', 'product__category')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class FavoriteDestroyView(generics.DestroyAPIView):
+    serializer_class = FavoriteSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        product_id = self.kwargs['product_id']
+        return get_object_or_404(Favorite, user=self.request.user, product_id=product_id)
+
+
+class ProductRatingListView(generics.ListAPIView):
+    serializer_class = RatingSerializer
+
+    def get_queryset(self):
+        product_id = self.kwargs['pk']
+        return Rating.objects.filter(product_id=product_id).select_related('user', 'product')
+
+
+class ProductRatingView(generics.GenericAPIView):
+    serializer_class = RatingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_product(self):
+        return get_object_or_404(Product, pk=self.kwargs['pk'])
+
+    def post(self, request, *args, **kwargs):
+        product = self.get_product()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        rating, created = Rating.objects.update_or_create(
+            user=request.user,
+            product=product,
+            defaults={
+                'score': serializer.validated_data['score'],
+                'review': serializer.validated_data.get('review', ''),
+            }
+        )
+        product.update_rating_stats()
+        output_serializer = self.get_serializer(rating)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+        product = self.get_product()
+        rating = Rating.objects.filter(user=request.user, product=product).first()
+        if not rating:
+            return Response({'detail': 'Rating not found.'}, status=status.HTTP_404_NOT_FOUND)
+        rating.delete()
+        product.update_rating_stats()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['POST'])
 def reserve_product(request, product_id):

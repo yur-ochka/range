@@ -4,7 +4,11 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Category, Product
+from django.contrib.auth import get_user_model
+
+from .models import Category, Product, Favorite, Rating
+
+User = get_user_model()
 
 
 class ProductCatalogTests(APITestCase):
@@ -79,3 +83,111 @@ class ProductCatalogTests(APITestCase):
 			[item['id'] for item in response_default.data['results']],
 			[item['id'] for item in response_unknown.data['results']],
 		)
+
+
+class FavoriteTests(APITestCase):
+	def setUp(self):
+		self.user = User.objects.create_user(
+			email='fav@example.com',
+			username='favourite',
+			password='StrongPass123!',
+			first_name='Fav',
+			last_name='User',
+		)
+		self.category = Category.objects.create(title='Bags')
+		self.product = Product.objects.create(
+			title='Backpack',
+			description='Travel backpack',
+			price=Decimal('49.99'),
+			category=self.category,
+			rating=Decimal('0.00'),
+			stock_quantity=20,
+			in_stock=True,
+		)
+		self.list_url = reverse('favorite-list')
+		self.delete_url = reverse('favorite-delete', kwargs={'product_id': self.product.pk})
+
+	def test_add_and_list_favorites(self):
+		self.client.force_authenticate(user=self.user)
+
+		create_response = self.client.post(self.list_url, {'product_id': self.product.pk}, format='json')
+		self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+		self.assertTrue(Favorite.objects.filter(user=self.user, product=self.product).exists())
+
+		list_response = self.client.get(self.list_url)
+		self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+		self.assertEqual(list_response.data['count'], 1)
+		self.assertEqual(list_response.data['results'][0]['product']['id'], str(self.product.pk))
+
+	def test_remove_favorite(self):
+		Favorite.objects.create(user=self.user, product=self.product)
+		self.client.force_authenticate(user=self.user)
+
+		delete_response = self.client.delete(self.delete_url)
+		self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+		self.assertFalse(Favorite.objects.filter(user=self.user, product=self.product).exists())
+
+
+class RatingTests(APITestCase):
+	def setUp(self):
+		self.user = User.objects.create_user(
+			email='rate@example.com',
+			username='rateuser',
+			password='StrongPass123!',
+			first_name='Rate',
+			last_name='User',
+		)
+		self.category = Category.objects.create(title='Electronics')
+		self.product = Product.objects.create(
+			title='Headphones',
+			description='Noise cancelling',
+			price=Decimal('199.99'),
+			category=self.category,
+			rating=Decimal('0.00'),
+			stock_quantity=15,
+			in_stock=True,
+		)
+		self.rate_url = reverse('product-rate', kwargs={'pk': self.product.pk})
+		self.list_url = reverse('product-rating-list', kwargs={'pk': self.product.pk})
+
+	def test_create_and_update_rating(self):
+		self.client.force_authenticate(user=self.user)
+
+		create_response = self.client.post(self.rate_url, {'score': 5, 'review': 'Great sound'}, format='json')
+		self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+		self.product.refresh_from_db()
+		self.assertEqual(self.product.rating_count, 1)
+		self.assertEqual(str(self.product.rating), '5.00')
+
+		update_response = self.client.post(self.rate_url, {'score': 3}, format='json')
+		self.assertEqual(update_response.status_code, status.HTTP_200_OK)
+		self.product.refresh_from_db()
+		self.assertEqual(self.product.rating_count, 1)
+		self.assertEqual(str(self.product.rating), '3.00')
+
+	def test_delete_rating_resets_stats(self):
+		Rating.objects.create(user=self.user, product=self.product, score=4)
+		self.product.update_rating_stats()
+		self.client.force_authenticate(user=self.user)
+
+		delete_response = self.client.delete(self.rate_url)
+		self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+		self.product.refresh_from_db()
+		self.assertEqual(self.product.rating_count, 0)
+		self.assertEqual(str(self.product.rating), '0.00')
+
+	def test_list_ratings(self):
+		other_user = User.objects.create_user(
+			email='another@example.com',
+			username='anotheruser',
+			password='StrongPass123!',
+			first_name='Another',
+			last_name='User',
+		)
+		Rating.objects.create(user=self.user, product=self.product, score=4, review='Nice')
+		Rating.objects.create(user=other_user, product=self.product, score=5, review='Excellent')
+		self.product.update_rating_stats()
+
+		response = self.client.get(self.list_url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(len(response.data['results']), 2)
