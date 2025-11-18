@@ -1,5 +1,4 @@
 import os
-import dj_database_url  # <-- Додано цей імпорт
 from pathlib import Path
 from urllib.parse import urlparse
 from decouple import config, Csv
@@ -69,24 +68,51 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# --- Database configuration (Рекомендований варіант) ---
-# Цей блок замінює всю вашу попередню логіку if/elif/else
+DATABASE_URL = config('DATABASE_URL', default='').strip()
+DATABASE_ENGINE = config('DATABASE_ENGINE', default='sqlite').strip().lower()
 
-DATABASES = {
-    'default': dj_database_url.config(
-        # Читає DATABASE_URL зі змінних оточення або .env
-        default=config('DATABASE_URL', default=''),
-        conn_max_age=600
-    )
-}
-
-# Якщо DATABASE_URL не задано, налаштовуємо SQLite за замовчуванням
-if not DATABASES['default']:
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3', # Простіший шлях до SQLite
+if DATABASE_URL:
+    parsed = urlparse(DATABASE_URL)
+    scheme = parsed.scheme or ''
+    if scheme.startswith('postgres'):
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': (parsed.path or '/').lstrip('/') or config('POSTGRES_DB', default='postgres'),
+                'USER': parsed.username or config('POSTGRES_USER', default='postgres'),
+                'PASSWORD': parsed.password or config('POSTGRES_PASSWORD', default=''),
+                'HOST': parsed.hostname or config('POSTGRES_HOST', default='localhost'),
+                'PORT': str(parsed.port or config('POSTGRES_PORT', default='5432')),
+            }
+        }
+    else:
+        raise ImproperlyConfigured('Unsupported DATABASE_URL scheme. Only postgres is supported.')
+elif DATABASE_ENGINE in {'postgres', 'postgresql', 'psql'}:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('POSTGRES_DB', default='postgres'),
+            'USER': config('POSTGRES_USER', default='postgres'),
+            'PASSWORD': config('POSTGRES_PASSWORD', default=''),
+            'HOST': config('POSTGRES_HOST', default='localhost'),
+            'PORT': config('POSTGRES_PORT', default='5432'),
+        }
     }
-# --- Кінець блоку Database configuration ---
+else:
+    sqlite_path = config('DATABASE_PATH', default=str(BASE_DIR.parent.parent / 'databases' / 'db.sqlite3'))
+    sqlite_path = Path(sqlite_path)
+    try:
+        sqlite_path.parent.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': str(sqlite_path),
+        }
+    }
+
 
 
 AUTH_PASSWORD_VALIDATORS = [
