@@ -5,24 +5,29 @@ import { ItemCardProps } from "../category";
 export interface CategoryCardProps {
   title: string;
   description: string | null;
-  imageUrl: string;
+  image_url: string;
   altText?: string;
   id: string;
-  items: ItemCardProps[];
+  products: ItemCardProps[];
 }
 
 export function CategoryCard({
   title,
   description,
-  imageUrl,
+  image_url,
   altText,
   id,
 }: CategoryCardProps) {
   return (
     <Link href={`/category/${id}`} style={{ textDecoration: "none" }}>
-      <Box mah="489px">
-        <Stack align="stretch" gap="sm">
-          <Image src={imageUrl} alt={altText ? altText : "Placeholder"}></Image>
+      <Box h={500} className="flex flex-col justify-between">
+        <Stack h={500} align="stretch" gap="sm" justify="space-between">
+          <Image
+            src={image_url}
+            fit="contain"
+            alt={altText ? altText : "Placeholder"}
+            className="object-cover w-full h-96"
+          ></Image>
           <Title order={4}>{title}</Title>
           <Text>{description}</Text>
         </Stack>

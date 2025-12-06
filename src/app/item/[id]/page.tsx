@@ -1,3 +1,4 @@
+"use client";
 import {
   Box,
   Group,
@@ -10,20 +11,8 @@ import {
   Center,
   Flex,
 } from "@mantine/core";
+import { use, useEffect, useState } from "react";
 
-const item = {
-  id: "1",
-  title: "iPhone 17 Pro Max 256 GB Cosmic Orange",
-  subtitile: "Short subtitle here",
-  description: "This is a detailed description of the item.",
-  inStock: true,
-  price: 149.99,
-  imageUrl: "https://s.ek.ua/jpg_zoom1/2827844.jpg",
-  altText: "Sample Item Image",
-  rating: 4.5,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-};
 export interface ItemProps {
   id: string;
   title: string;
@@ -31,31 +20,55 @@ export interface ItemProps {
   description: string | null;
   inStock?: boolean;
   price: number;
-  imageUrl: string | null;
+  image_url: string | null;
   altText?: string;
   rating?: number;
   createdAt: string;
   updatedAt: string;
 }
 export default function ItemPage({
-  id,
-  title,
-  subtitile,
-  description,
-  inStock,
-  price,
-  imageUrl,
-  altText,
-  createdAt,
-  updatedAt,
-}: ItemProps) {
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+
+  const [product, setProduct] = useState<ItemProps | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(
+          `https://range-lvzt.onrender.com/api/catalog/products/${id}/`
+        );
+        if (!res.ok) throw new Error("Failed to fetch product");
+        const data: ItemProps = await res.json();
+        setProduct(data);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProduct();
+  }, [id]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!product) return <div>No category found</div>;
+
   return (
     <Center py="xl">
       <Box w="90%" maw={1200}>
         <Group align="flex-start" wrap="nowrap">
           <Image
-            src={item.imageUrl}
-            alt={item.altText ?? ""}
+            src={product.image_url}
+            alt={product.altText ?? ""}
             fit="contain"
             mah={600}
             maw={500}
@@ -65,21 +78,21 @@ export default function ItemPage({
           <Stack h={600} justify="space-between" p="lg" style={{ flex: 1 }}>
             <Stack gap="md">
               <Title order={1} style={{ lineHeight: 1.15 }}>
-                {item.title}
+                {product.title}
               </Title>
 
-              <Text c={item.inStock ? "green" : "red"}>
-                {item.inStock ? "В наявності" : "Немає в наявності"}
+              <Text c={product.inStock ? "green" : "red"}>
+                {product.inStock ? "В наявності" : "Немає в наявності"}
               </Text>
 
-              <Title order={2}>{item.price} грн</Title>
+              <Title order={2}>{product.price} грн</Title>
 
               <div>
                 <Text fw={600} mb={4}>
                   Рейтинг товару:
                 </Text>
                 <Rating
-                  value={item.rating}
+                  value={product.rating}
                   fractions={10}
                   readOnly
                   size="lg"

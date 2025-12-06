@@ -1,7 +1,7 @@
 import { Box, SimpleGrid } from "@mantine/core";
 import { ItemCardProps } from "./ItemCard";
 import { ItemCard } from "./ItemCard";
-interface ItemListProps {
+export interface ItemListProps {
   items: ItemCardProps[];
 }
 export function ItemList({ items }: ItemListProps) {
