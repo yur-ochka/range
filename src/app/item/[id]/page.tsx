@@ -1,4 +1,5 @@
 "use client";
+import { api } from "@/lib/api";
 import {
   Box,
   Group,
@@ -36,6 +37,19 @@ export default function ItemPage({
   const [product, setProduct] = useState<ItemProps | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  async function addToCart(productId: string, quantity: number = 1) {
+    try {
+      await api("/api/cart/items/", {
+        method: "POST",
+        body: JSON.stringify({ product_id: productId, quantity }),
+      });
+      alert("Товар додано до кошика!");
+    } catch (err) {
+      console.error(err);
+      alert("Помилка при додаванні товару в кошик");
+    }
+  }
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -103,7 +117,12 @@ export default function ItemPage({
 
             <Stack gap="md">
               <Group gap="md">
-                <Button variant="filled" color="black" radius="md">
+                <Button
+                  onClick={() => addToCart(product.id)}
+                  variant="filled"
+                  color="black"
+                  radius="md"
+                >
                   Додати до кошика
                 </Button>
                 <Button variant="outline" color="dark" radius="md">

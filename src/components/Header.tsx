@@ -3,16 +3,26 @@
 import { Group, Button, Title, Flex } from "@mantine/core";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext"; // ⚠️ важливо!
 
 export default function Header() {
   const router = useRouter();
+  const { user } = useAuth(); // <-- тут беремо користувача
 
   const onAccountClick = () => {
-    router.push("/auth/login");
+    if (user) {
+      router.push("/profile"); // якщо користувач увійшов
+    } else {
+      router.push("/auth/login"); // якщо не увійшов
+    }
   };
 
   const onHomeClick = () => {
     router.push("/");
+  };
+
+  const onCartClick = () => {
+    router.push("/cart");
   };
 
   return (
@@ -34,7 +44,12 @@ export default function Header() {
           Перейти до каталогу товарів
         </Button>
 
-        <Button variant="transparent" color="black" size="md">
+        <Button
+          onClick={onCartClick}
+          variant="transparent"
+          color="black"
+          size="md"
+        >
           Кошик
         </Button>
 
@@ -45,7 +60,7 @@ export default function Header() {
           size="md"
           onClick={onAccountClick}
         >
-          Мій акаунт
+          {user ? "Мій акаунт" : "Вхід / Реєстрація"}
         </Button>
       </Group>
     </Flex>
