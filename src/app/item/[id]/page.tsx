@@ -20,7 +20,7 @@ export interface ItemProps {
   title: string;
   subtitile: string | null;
   description: string | null;
-  inStock?: boolean;
+  in_stock?: boolean;
   price: number;
   image_url: string | null;
   altText?: string;
@@ -85,8 +85,8 @@ export default function ItemPage({
                 {product.title}
               </Title>
 
-              <Text c={product.inStock ? "green" : "red"}>
-                {product.inStock ? "В наявності" : "Немає в наявності"}
+              <Text c={product.in_stock ? "green" : "red"}>
+                {product.in_stock ? "В наявності" : "Немає в наявності"}
               </Text>
 
               <Title order={2}>{product.price} грн</Title>
@@ -107,14 +107,27 @@ export default function ItemPage({
 
             <Stack gap="md">
               <Group gap="md">
-                <Button
-                  onClick={() => addToCart(product.id)}
-                  variant="filled"
-                  color="black"
-                  radius="md"
-                >
-                  Додати до кошика
-                </Button>
+                {product.in_stock ? (
+                  <Button
+                    onClick={() => addToCart(product.id)}
+                    variant="filled"
+                    color="black"
+                    radius="md"
+                  >
+                    Додати до кошика
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => addToCart(product.id)}
+                    variant="filled"
+                    color="black"
+                    radius="md"
+                    disabled
+                  >
+                    Додати до кошика
+                  </Button>
+                )}
+
                 <Button variant="outline" color="dark" radius="md">
                   Оформити замовлення
                 </Button>

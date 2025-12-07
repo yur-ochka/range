@@ -22,16 +22,13 @@ interface CartItem {
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingOrder, setProcessingOrder] = useState(false);
 
-  // --------------------------
-  // Завантаження кошика
-  // --------------------------
   async function loadCart() {
     setLoading(true);
     try {
       const data = await api("/api/cart/");
-      console.log(data);
-      setCartItems(data.items); // припускаємо, що бекенд повертає {items: [...]}
+      setCartItems(data.items);
     } catch (err) {
       console.error(err);
     } finally {
@@ -43,9 +40,6 @@ export default function CartPage() {
     loadCart();
   }, []);
 
-  // --------------------------
-  // Змінити кількість / видалити
-  // --------------------------
   async function updateItem(itemId: string, quantity: number) {
     try {
       if (quantity <= 0) {
@@ -64,6 +58,28 @@ export default function CartPage() {
     }
   }
 
+  async function createOrder() {
+    try {
+      setProcessingOrder(true);
+
+      const res = await api("/api/orders/create-from-cart/", {
+        method: "POST",
+        body: JSON.stringify({ shipping_address: "place" }),
+      });
+
+      alert("Замовлення успішно оформлено! 🎉");
+
+      await loadCart();
+
+      console.log("Order created:", res);
+    } catch (err) {
+      console.error(err);
+      alert("Сталася помилка під час оформлення замовлення.");
+    } finally {
+      setProcessingOrder(false);
+    }
+  }
+
   if (loading) return <Loader />;
 
   if (cartItems.length === 0)
@@ -78,6 +94,7 @@ export default function CartPage() {
       <Text size="xl" mb="md">
         Ваш кошик 🛒
       </Text>
+
       {cartItems.map((item) => (
         <Flex
           key={item.id}
@@ -96,6 +113,7 @@ export default function CartPage() {
             >
               -
             </Button>
+
             <NumberInput
               value={item.quantity}
               onChange={(val) => updateItem(item.id, Number(val) || 1)}
@@ -103,12 +121,14 @@ export default function CartPage() {
               max={999}
               style={{ width: 60 }}
             />
+
             <Button
               size="xs"
               onClick={() => updateItem(item.id, item.quantity + 1)}
             >
               +
             </Button>
+
             <Button
               color="red"
               size="xs"
@@ -119,6 +139,17 @@ export default function CartPage() {
           </Flex>
         </Flex>
       ))}
+
+      <Center mt="lg">
+        <Button
+          size="md"
+          onClick={createOrder}
+          loading={processingOrder}
+          style={{ width: "250px" }}
+        >
+          Оформити замовлення
+        </Button>
+      </Center>
     </Box>
   );
 }
