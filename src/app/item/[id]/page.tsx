@@ -13,6 +13,7 @@ import {
   Flex,
 } from "@mantine/core";
 import { use, useEffect, useState } from "react";
+import { useCartActions } from "@/app/hooks/useCartActions";
 
 export interface ItemProps {
   id: string;
@@ -38,18 +39,7 @@ export default function ItemPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function addToCart(productId: string, quantity: number = 1) {
-    try {
-      await api("/api/cart/items/", {
-        method: "POST",
-        body: JSON.stringify({ product_id: productId, quantity }),
-      });
-      alert("Товар додано до кошика!");
-    } catch (err) {
-      console.error(err);
-      alert("Помилка при додаванні товару в кошик");
-    }
-  }
+  const { addToCart } = useCartActions();
 
   useEffect(() => {
     const loadProduct = async () => {
