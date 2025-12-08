@@ -3,17 +3,26 @@
 import { Group, Button, Title, Flex } from "@mantine/core";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext"; // ⚠️ важливо!
+import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react";
+import { UserModal } from "@/components/UserModal";
 
 export default function Header() {
   const router = useRouter();
-  const { user } = useAuth(); // <-- тут беремо користувача
+  const { user } = useAuth();
+
+  const [opened, setOpened] = useState(false);
+  const [isLogged, setIsLogged] = useState(false);
+
+  useEffect(() => {
+    setIsLogged(!!localStorage.getItem("access_token"));
+  }, []);
 
   const onAccountClick = () => {
     if (user) {
-      router.push("/profile"); // якщо користувач увійшов
+      setOpened(true);
     } else {
-      router.push("/auth/login"); // якщо не увійшов
+      router.push("/auth/login");
     }
   };
 
@@ -63,6 +72,7 @@ export default function Header() {
           {user ? "Мій акаунт" : "Вхід / Реєстрація"}
         </Button>
       </Group>
+      <UserModal opened={opened} onClose={() => setOpened(false)} />
     </Flex>
   );
 }

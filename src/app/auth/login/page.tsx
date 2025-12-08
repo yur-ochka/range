@@ -50,7 +50,8 @@ export default function LoginForm() {
       sessionStorage.setItem("access", res.access);
       localStorage.setItem("refresh", res.refresh);
 
-      router.push("/"); // після логіну
+      router.push("/");
+      localStorage.setItem("username", email);
     } catch (err: any) {
       setGeneralError(err.message);
     }

@@ -57,6 +57,7 @@ export default function SignUpForm() {
       });
 
       router.push("/auth/login");
+      localStorage.setItem("username", email);
     } catch (err: any) {
       setGeneralError(err.message);
     }
